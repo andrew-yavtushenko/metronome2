@@ -9,23 +9,26 @@ window.onload = ->
     taskDuration = null
     currentTask = null
     pm = window.postMessage
-    now = null
+    throttleCounter = null
 
     run = (event) ->
-      now = Date.now()
-      if timestamp < now
-        currentTask = source.tasks[source.currentTaskIndex]
-        currentTask.start()
-        taskDuration = (source.getTaskDuration(currentTask))|0
-        timestamp = now + taskDuration
-        source.moveToNextTask()
-        if !source.looped && source.currentTaskIndex == 0
-          stop()
+      throttleCounter++
+      if throttleCounter == 3
+        now = Date.now()
+        if timestamp < now
+          currentTask = source.tasks[source.currentTaskIndex]
+          currentTask.start()
+          taskDuration = (source.getTaskDuration(currentTask))|0
+          timestamp = now + taskDuration
+          source.moveToNextTask()
+          if !source.looped && source.currentTaskIndex == 0
+            stop()
+        throttleCounter = 0
       pm 0, '*'
 
     start = () ->
+      throttleCounter = 0
       if source.tasks.length
-        timestamp = Date.now()
         window.addEventListener 'message', run, true
         pm 0, '*'
 
