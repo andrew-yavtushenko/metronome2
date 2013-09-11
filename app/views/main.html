@@ -1,0 +1,72 @@
+<div ng-controller='Sequencer.MainCtrl' class="hero-unit">
+  <h1>Sequencer 2</h1>
+  <p>
+    <h3>Bpm: {{currentBpm}}</h3>
+    <input type='range' min=40 max=300 step=2 value=120 ng-model='currentBpm'>
+  </p>
+  <div ng-controller='Sequencer.TrackCtrl'>
+    <div class="row">
+      <div class='col-xs-2'>
+        <input class='form-control' type="text" ng-model='newTrackName' placeholder='New track name'>
+      </div>
+      <div class='col-xs-2'>
+        <a href="" ng-click='createTrack(newTrackName)' class='btn btn-default'>Create track</a>
+      </div>
+    </div>
+    <ul class='list-unstyled tracks'>
+      <li ng-repeat='track in tracks'>
+        <h3>
+          {{track.name}}
+          <a href="" class='btn btn-default' ng-click='createPattern(track, currentBeat, currentNoteValue)'>Add pattern</a>
+        </h3>
+        <form class='form-inline row'>
+          <div class='col-xs-2'>
+            <select class='form-control' name='beat' id='beat' ng-model='currentBeat' ng-options="b.name for b in beat"></select>  
+          </div>
+          <div class='col-xs-2'>
+            <select class='form-control' name='noteValue' id='noteValue' ng-model='currentNoteValue' ng-options="n.name for n in noteValue"></select>
+          </div>
+        </form>
+        <ul class='list-unstyled patterns'>
+          <li ng-repeat='pattern in track.patterns'>
+            <h5>
+              <span>{{track.patterns.indexOf(pattern) + 1}}</span>
+              <span>{{pattern.beat.name}}/{{pattern.noteValue.name}}</span>
+              <a href="" ng-click='deletePattern(track, pattern)'>&times;</a>
+            </h5>
+            <div class="row">
+              <div class='col'>
+                <select class='form-control' name='subDivision' id='subDivision' ng-model='pattern.currentSubDivision' ng-options="s.name for s in pattern.availableSubDivisions"></select>
+              </div>
+              <div class='col'>
+                <select class='form-control' name='audio' id='audio' ng-model='currentAudio' ng-options="a.title for a in audios"></select>
+              </div>
+              <div class='col'>
+                <a href="" class='btn btn-default' ng-click='createLine(pattern, currentAudio, pattern.currentSubDivision)'>Add Line</a>
+              </div>
+            </div>
+            <ul class='list-unstyled'>
+              <li class='line' ng-repeat='line in pattern.lines'>
+                <div class='line-title'>
+                  <span>{{line.sound.title}}</span>
+                  <span>{{line.subDivision.name}}</span>
+                  <a href="" ng-click='deleteLine(pattern, line)'>&times;</a>
+                </div>
+                <ul class='lines'><!--
+                --><li ng-repeat='note in line.notes track by $index'
+                       class='subdivision-{{note.value}}'
+                       note-height='{{note.height}}'
+                       ng-click='updateNote(line, note)'></li><!--
+                   --></ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
+    <div class="row">
+      <div class="col-xs-2"><a href="" class='btn btn-primary' ng-click='start(currentTrack)'>start</a></div>
+      <div class="col-xs-2"><a href="" class='btn btn-danger' ng-click='stop(currentTrack)'>stop</a></div>
+    </div>
+  </div>
+</div>
