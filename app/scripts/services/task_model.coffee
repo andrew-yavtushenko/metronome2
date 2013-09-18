@@ -2,41 +2,30 @@
 
 window.Sequencer ||= {}
 
-Sequencer.taskModel = (q, rootScope) ->
+Sequencer.trackModel = (track) ->
 
-  createWorker = (name) ->
-    resolveWorker = (event) ->
-      if event.data == 'scheduler'
-        deferred.resolve(frame.contentWindow)
-        rootScope.$apply()
-        window.removeEventListener 'message', resolveWorker, true
+  (source, timingFunction) ->
 
-    deferred = q.defer()
-
-    frame = document.createElement 'iframe'
-    frame.src = name+'.html'
-    document.body.appendChild frame
-
-    window.addEventListener 'message', resolveWorker, true
-
-    deferred.promise
-
-  (sourceTasks, timingFunction, sourceIsLooped, sourceCurrentTaskIndex) ->
-
-    deferred = q.defer()
-
-    instance =
-      tasks: sourceTasks
+    _.extend source,
       getTaskDuration: timingFunction
-      looped: sourceIsLooped
-      currentTaskIndex: sourceCurrentTaskIndex
       moveToNextTask: ->
-        if @currentTaskIndex+1 == @tasks.length
-          @currentTaskIndex = 0
+        if @currentPatternIndex+1 == @patterns.length
+          @currentPatternIndex = 0
         else
-          @currentTaskIndex++
+          @currentPatternIndex++
 
-    createWorker('task_scheduler').then (worker) ->
-      deferred.resolve worker.init(instance)
+    track(source)
 
-    deferred.promise
+Sequencer.patternModel = (bar) ->
+
+  (source, timingFunction) ->
+
+    _.extend source,
+      getTaskDuration: timingFunction
+      moveToNextTask: ->
+        if @currentLineIndex+1 == @notes.length
+          @currentLineIndex = 0
+        else
+          @currentLineIndex++
+
+    bar(source)
