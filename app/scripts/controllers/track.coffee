@@ -35,7 +35,6 @@ Sequencer.TrackCtrl = (s, rootScope, q, timing, trackModel, patternModel, audioS
 
     availableSubDivisions = _.compact(_.map s.subDivisions, (subDivision) -> subDivision if subDivision.value >= noteValue.value)
     s.currentTrack = _.find s.tracks, track
-    s.currentTrack.currentPatternIndex++ if s.currentTrack.currentPatternIndex != 0
     pattern = 
       availableSubDivisions: availableSubDivisions
       currentSubDivision: availableSubDivisions[0]
@@ -86,14 +85,13 @@ Sequencer.TrackCtrl = (s, rootScope, q, timing, trackModel, patternModel, audioS
     pattern.lines.push currentLine
 
   s.deletePattern = (track, pattern) ->
+    track.stop()
     pattern.stop()
     track.patterns.splice(track.patterns.indexOf(pattern),1)
-    --track.currentPatternIndex
 
   s.deleteLine = (pattern, line) ->
     line.stop()
     pattern.lines.splice(pattern.lines.indexOf(line),1)
-    --pattern.currentLineIndex
 
 
 
