@@ -13,6 +13,7 @@ Sequencer.track = (scheduler) ->
           currentTask = taskSource.patterns[taskSource.currentPatternIndex]
           currentTask.start()
           taskDuration = (taskSource.getTaskDuration(currentTask))|0
+          console.log taskDuration
           executeTask(taskDuration, start)
           taskSource.moveToNextTask()
           if !taskSource.looped && taskSource.currentPatternIndex == 0
@@ -27,6 +28,8 @@ Sequencer.track = (scheduler) ->
       source.connect(context.destination)
       source.onended = callback
       source.start = source.noteOn if !source.start
+      console.log duration
+      console.log buffer.duration
       source.start(0)
 
     stop = ->

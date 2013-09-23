@@ -7,14 +7,19 @@ Sequencer.TrackCtrl = (s, rootScope, q, timing, trackModel, patternModel, audioS
   s.trackAmmout = 0
   s.newTrackName = 'New track'
   s.currentTrack = null
+  s.state = 'stopped'
 
   s.start = (track) ->
-    track.started = true
-    track.start()
-    console.profile(s.newTrackName)
+    if s.state == 'stopped'
+      s.state = 'playing'
+      track.started = true
+      track.startPattern()
+      console.profile(s.newTrackName)
   s.stop = (track) ->
-    track.stop()
-    console.profileEnd()
+    if s.state = 'playing'
+      s.state = 'stopped'
+      track.stop()
+      console.profileEnd()
 
   s.createTrack = (name) ->
     s.currentTrack =
@@ -23,18 +28,25 @@ Sequencer.TrackCtrl = (s, rootScope, q, timing, trackModel, patternModel, audioS
       looped: true
       currentPatternIndex: 0
       started: false
-
-    s.currentTrack.patternWorker = trackModel(s.currentTrack,timing(window.bpm).patternDuration)
-    s.currentTrack.start = ->
-      s.currentTrack.started = true
-      s.currentTrack.patternWorker.start()
-    s.currentTrack.stop = -> s.currentTrack.patternWorker.stop()
+      startPattern: ->
+        @patterns[@currentPatternIndex].start().then moveToNextPattern
+      stop: ->
+        @patterns[@currentPatternIndex].stop()
     s.tracks[name] = s.currentTrack
+
+  moveToNextPattern = (pattern) ->
+    if s.currentTrack.currentPatternIndex+1 == s.currentTrack.patterns.length
+      s.currentTrack.currentPatternIndex = 0
+    else
+      s.currentTrack.currentPatternIndex++
+    s.currentTrack.startPattern()
+
 
   s.createPattern = (track, beat, noteValue) ->
 
     availableSubDivisions = _.compact(_.map s.subDivisions, (subDivision) -> subDivision if subDivision.value >= noteValue.value)
     s.currentTrack = _.find s.tracks, track
+
     pattern = 
       availableSubDivisions: availableSubDivisions
       currentSubDivision: availableSubDivisions[0]
@@ -42,16 +54,19 @@ Sequencer.TrackCtrl = (s, rootScope, q, timing, trackModel, patternModel, audioS
       noteValue: noteValue
       lines: []
       start: ->
-        _.each @lines, (line) ->
-          line.started = true
-          line.start()
-      stop: ->
-        _.each @lines, (line) ->
-          line.started = false
-          line.stop()
+        console.log @pace
+        @pace.start()
+      stop: -> @pace.stop()
+
+    pace = buildLine(pattern, null, availableSubDivisions[0])
+    pattern.pace = pace
     s.currentTrack.patterns.push pattern
 
   s.createLine = (pattern, sound, subDivision) ->
+    line = buildLine(pattern, sound, subDivision)
+    pattern.lines.push line
+
+  buildLine = (pattern, sound, subDivision) ->
     notesArr = ->
       arr = new Array(Math.ceil(pattern.beat.value*subDivision.value/pattern.noteValue.value))
       arr = _.map arr, (num, key, array) ->
@@ -82,15 +97,17 @@ Sequencer.TrackCtrl = (s, rootScope, q, timing, trackModel, patternModel, audioS
     
     extendedCurrentLine = bar(currentLine)
     _.extend currentLine, bar(currentLine)
-    pattern.lines.push currentLine
+    currentLine
 
   s.deletePattern = (track, pattern) ->
-    track.stop()
-    pattern.stop()
+    if s.state == 'playing'
+      track.stop()
+      pattern.stop()
     track.patterns.splice(track.patterns.indexOf(pattern),1)
 
   s.deleteLine = (pattern, line) ->
-    line.stop()
+    if s.state == 'playing'
+      line.stop()
     pattern.lines.splice(pattern.lines.indexOf(line),1)
 
 
